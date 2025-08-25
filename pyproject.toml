@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agroecogym-engine"
+version = "1.250825"
+description = "Engine for the AgroEcoGym project"
+authors = [{ name = "Odalric-Ambym Maillard", email = "odalric.maillard@inria.fr" }]
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.8"
+dependencies = [
+    "gymnasium==1.2.0",
+    "numpy==1.24.3",
+    "joblib==1.3.2",
+    "matplotlib==3.7.2"
+]
+#Also default packages: time,os,pickle,pathlib,multiprocessing,inspect
+
+[project.urls]
+Homepage = "https://github.com/AgroEcoGym/engine"
+
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
