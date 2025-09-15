@@ -1,0 +1,325 @@
+plant:
+  name: "Pea"
+  lifecycle:
+    type: "annual"  # "annual", "biennial", "perennial"
+    stages:
+      - name: "germination"
+        duration_days: 5
+      - name: "vegetative"
+        duration_days: 20
+      - name: "flowering"
+        duration_days: 15
+        pollination: "self"  # "wind", "insect", "self"
+      - name: "fruiting"
+        duration_days: 20
+      - name: "senescence"
+        duration_days: 10
+      - name: "dead"
+        terminal: true
+
+  growth:
+    light_days_to_maturity#day: 65  # days under optimal light
+    vegetative_temp#°C: 5
+    optimal_temp_range#°C: [15, 25]
+    optimal_soil_moisture#%: 0.6  # 0.0 - 1.0
+    growth_rate_modifiers:
+      drought_tolerance: 0.4  # 0 = sensitive, 1 = tolerant
+      heat_tolerance: 0.6
+      shade_tolerance: 0.5
+    optimal:
+      (weather, air_humidity#%): [ 50,95 ]
+
+
+  morphology:
+    height_cm: 60
+    radius_cm: 20
+    root_profile:
+      type: "fibrous"
+      depth_cm: 40
+      lateral_spread_cm: 30
+      nutrient_uptake:
+        N: "high"
+        P: "medium"
+        K: "low"
+      nutrient_remobilization:
+        K: "upward"
+      microbial_stimulation: "high"  # none, low, medium, high
+      allelopathic_effect: "none"    # can be "inhibitory", "stimulatory"
+
+  resource_interactions:
+    soil_effects:
+      N:
+        uptake_rate: "medium"
+        contribution: "high"  # fixes N
+      P:
+        uptake_rate: "medium"
+      K:
+        uptake_rate: "low"
+    water_use:
+      demand: "medium"
+      retention_effect: "neutral"  # can be positive if retains moisture
+
+  canopy:
+    coverage_ratio: 0.4     # 0.0 = bare soil, 1.0 = full cover
+    shading_factor: 0.3     # how much it reduces light below
+
+  biotic_interactions:
+    insect_attraction:
+      bees: "medium"
+      aphids: "low"
+    insect_repulsion:
+      whiteflies: "medium"
+    pollination_dependencies:
+      insects: true
+      wind: false
+
+  notes: "Legume plant; improves nitrogen levels in soil."
+
+
+
+
+
+
+
+
+
+
+
+tomato:
+  cycle_type: annual
+  pollination_conditions:
+    wind#%: 1
+    insects#%: 50
+    self#%: 100
+  optimal_conditions:
+    temperature#°C: [20, 28]
+    humidity#%: [50, 70]
+    sunlight#h: [6, 12]
+  tolerance:
+    temperature_range#°C: [10, 35]
+    drought_resistance#days: 3
+    #pests?
+  nutrients:
+    uptake:
+      N: high
+      P: medium
+      K: high
+      #Water?
+    contribution:
+      N: none
+  size_at_maturity:
+    radius#m: 0.5
+    height#m: 1.2
+  #services: shade ? attracts pollinators ? root system?
+  growth: #in optimal conditions
+    growth_rate#cm.day-1: 1.8
+    #fruit_growth_rate? nb_flowers?
+    stage_duration_days:
+      seed_to_vegetative: 10
+      vegetative_to_flowering: 25
+      flowering_to_fruiting: 15
+      fruiting_to_senescence: 30
+      senescence_to_dead: 15
+  stages:
+    - seed
+    - vegetative
+    - flowering
+    - fruiting
+    - senescence
+    - dead
+
+onion:
+  cycle_type: biennial
+  pollination: insects
+  pollination_conditions:
+    wind: not_required
+    insects: required
+  optimal_conditions:
+    temperature: [ 13, 25 ]
+    humidity: [ 40, 70 ]
+    sunlight: [ 5, 10 ]
+  tolerance:
+    temperature_range: [ 5, 30 ]
+    drought_resistance: medium
+  nutrients:
+    uptake:
+      N: medium
+      P: low
+      K: medium
+    contribution:
+      N: none
+  size_at_maturity:
+    radius_m: 0.2
+    height_m: 0.5
+  growth:
+    growth_rate: 0.8
+    stage_duration_days:
+      seed_to_vegetative: 15
+      vegetative_to_bulb_maturation: 45
+      bulb_maturation_to_dormancy: 15
+      dormancy_to_flowering: 120  # deuxième année
+      flowering_to_seed_production: 30
+      seed_production_to_dead: 20
+  stages:
+    - seed
+    - vegetative
+    - bulb_maturation
+    - dormancy
+    - flowering
+    - seed_production
+    - dead
+
+
+pea:
+  cycle_type: annual
+  pollination: self
+  pollination_conditions:
+    wind: helpful
+    insects: optional
+  optimal_conditions:
+    temperature: [13, 21]
+    humidity: [60, 80]
+    sunlight: [5, 10]
+  tolerance:
+    temperature_range: [5, 30]
+    drought_resistance: low
+  nutrients:
+    uptake:
+      N: medium
+      P: medium
+      K: low
+    contribution:
+      N: enriches  # légumineuse
+  size_at_maturity:
+    radius_m: 0.3
+    height_m: 0.8
+  growth:
+    growth_rate: 1.2
+    stage_duration_days:
+      seed_to_vegetative: 8
+      vegetative_to_flowering: 20
+      flowering_to_fruiting: 10
+      fruiting_to_senescence: 30
+      senescence_to_dead: 10
+  stages:
+    - seed
+    - vegetative
+    - flowering
+    - fruiting
+    - senescence
+    - dead
+
+corn:
+  cycle_type: annual
+  pollination: wind
+  pollination_conditions:
+    wind: required
+    insects: not_required
+  optimal_conditions:
+    temperature: [18, 30]
+    humidity: [50, 80]
+    sunlight: [8, 14]
+  tolerance:
+    temperature_range: [10, 35]
+    drought_resistance: medium
+  nutrients:
+    uptake:
+      N: very_high
+      P: high
+      K: high
+    contribution:
+      N: none
+  size_at_maturity:
+    radius_m: 0.4
+    height_m: 2.5
+  growth:
+    growth_rate: 2.5
+    stage_duration_days:
+      seed_to_vegetative: 12
+      vegetative_to_flowering: 35
+      flowering_to_fruiting: 20
+      fruiting_to_senescence: 30
+      senescence_to_dead: 15
+  stages:
+    - seed
+    - vegetative
+    - flowering
+    - fruiting
+    - senescence
+    - dead
+
+lettuce:
+  cycle_type: annual
+  pollination: self
+  pollination_conditions:
+    wind: not_required
+    insects: optional
+  optimal_conditions:
+    temperature: [10, 20]
+    humidity: [50, 70]
+    sunlight: [4, 8]
+  tolerance:
+    temperature_range: [4, 30]
+    drought_resistance: low
+  nutrients:
+    uptake:
+      N: high
+      P: medium
+      K: medium
+    contribution:
+      N: none
+  size_at_maturity:
+    radius_m: 0.3
+    height_m: 0.4
+  growth:
+    growth_rate: 1.5
+    stage_duration_days:
+      seed_to_vegetative: 7
+      vegetative_to_flowering: 30
+      flowering_to_seed_production: 10
+      seed_production_to_dead: 10
+  stages:
+    - seed
+    - vegetative
+    - flowering
+    - seed_production
+    - dead
+
+strawberry:
+  cycle_type: perennial
+  pollination: insects
+  pollination_conditions:
+    wind: not_required
+    insects: required
+  optimal_conditions:
+    temperature: [15, 25]
+    humidity: [60, 80]
+    sunlight: [6, 12]
+  tolerance:
+    temperature_range: [0, 30]
+    drought_resistance: medium
+  nutrients:
+    uptake:
+      N: medium
+      P: medium
+      K: high
+    contribution:
+      N: slight_depletion
+  size_at_maturity:
+    radius_m: 0.25
+    height_m: 0.3
+  growth:
+    growth_rate: 1.0
+    stage_duration_days:
+      seed_to_vegetative: 10
+      vegetative_to_flowering: 20
+      flowering_to_fruiting: 10
+      fruiting_to_dormancy: 30
+      dormancy_to_regrowth: 60
+  stages:
+    - seed
+    - vegetative
+    - flowering
+    - fruiting
+    - dormancy
+    - regrowth
