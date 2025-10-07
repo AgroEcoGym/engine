@@ -102,8 +102,11 @@ class Entity_API:
         self.field = field
 
         if isinstance(parameters, str):
+            # self.parameters = load_yaml(
+            #     (self.__class__.__name__).lower() + "_specifications.yaml", parameters
+            # )
             self.parameters = load_yaml(
-                (self.__class__.__name__).lower() + "_specifications.yaml", parameters
+                (self.__class__.__name__) + "/"+parameters+".yaml"
             )
         else:
             self.parameters = parameters
@@ -276,7 +279,7 @@ class Entity_API:
             for key in self.parameters["sprites"]:
                 self.images[key] = Image.open(
                     CURRENT_DIR
-                    / ("specifications/sprites/" + self.parameters["sprites"][key])
+                    / ("rendering/sprites/" + self.parameters["sprites"][key])
                 )
 
     def to_fieldimage(self):

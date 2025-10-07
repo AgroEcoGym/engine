@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "agroecogym-engine"
-version = "1.250825"
+version = "1.250915"
 description = "Engine for the AgroEcoGym project"
 authors = [{ name = "Odalric-Ambym Maillard", email = "odalric.maillard@inria.fr" }]
 readme = "README.md"

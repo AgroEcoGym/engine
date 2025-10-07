@@ -1,27 +1,15 @@
-import inspect
 import sys
 
 import yaml
 
-import farmgym
-from agroecogym_engine.entities.Birds import Birds
-from agroecogym_engine.entities.Cide import Cide
-from agroecogym_engine.entities.Facilities import Facility
-from agroecogym_engine.entities.Fertilizer import Fertilizer
-from agroecogym_engine.entities.Pests import Pests
-from agroecogym_engine.entities.Plant import Plant
-from agroecogym_engine.entities.Pollinators import Pollinators
-from agroecogym_engine.entities.Soil import Soil
-
 ## The following import lines are import for the make_farm function that uses inspection module!
-from agroecogym_engine.entities.Weather import Weather
-from agroecogym_engine.entities.Weeds import Weeds
 from agroecogym_engine.farm import Farm
 from agroecogym_engine.actors.farmers.BasicFarmer import BasicFarmer
 from agroecogym_engine.field import Field
 from agroecogym_engine.actors.actionrules.BasicRule import BasicRule
 from agroecogym_engine.scores.BasicScore import BasicScore
-
+import agroecogym_engine.entities as entities_
+import importlib
 
 def make_farm(yamlfile):
     with open(yamlfile, "r", encoding="utf8") as file:
@@ -37,7 +25,9 @@ def make_farm(yamlfile):
             ent = []
             for e in entities:
                 k = (list(e.keys()))[0]
-                c = getattr(sys.modules[__name__], k)
+                module = importlib.import_module(f"{entities_.__name__}.{k.lower()}.{k.lower()}")
+                c = getattr(module, k)
+                #c = getattr(sys.modules[__name__], k)
                 # print("E",e, list(e.keys()), k,c)
                 ent.append((c, str(e[k])))
             fields.append(

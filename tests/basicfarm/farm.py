@@ -19,4 +19,4 @@ def env():
 
 if __name__ == "__main__":
     agent = Farmgym_RandomAgent()
-    run_gym_xp(env(), agent, max_steps=15, render="text")
+    run_gym_xp(env(), agent, max_steps=15, render="image")

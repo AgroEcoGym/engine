@@ -1,10 +1,10 @@
-from agroecogym_engine.entities.Birds import Birds
-from agroecogym_engine.entities.Fertilizer import Fertilizer
-from agroecogym_engine.entities.Pests import Pests
-from agroecogym_engine.entities.Plant import Plant
-from agroecogym_engine.entities.Pollinators import Pollinators
-from agroecogym_engine.entities.Soil import Soil
-from agroecogym_engine.entities.Weeds import Weeds
+from agroecogym_engine.entities.birds.birds import Birds
+from agroecogym_engine.entities.fertilizer.fertilizer import Fertilizer
+from agroecogym_engine.entities.pests.pests import Pests
+from agroecogym_engine.entities.plant.plant import Plant
+from agroecogym_engine.entities.pollinators.pollinators import Pollinators
+from agroecogym_engine.entities.soil.soil import Soil
+from agroecogym_engine.entities.weeds.weeds import Weeds
 
 
 def reward_stagetransition(entities_list: list):

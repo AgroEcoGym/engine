@@ -77,8 +77,8 @@ class Farm(gym.Env):
         # Naming
         self._namefields(fields)
         self._namefarmers(farmers)
-        self.name = self.build_fullname()
-        self.shortname = self.build_shortname()
+        self.name = self._build_fullname()
+        self.shortname = self._build_shortname()
 
         # Assign all fields to all farmers
         for f in farmers:
@@ -272,7 +272,7 @@ class Farm(gym.Env):
         for f in farmers:
             self.farmers[f.name] = f
 
-    def build_fullname(self):
+    def _build_fullname(self):
         """
         Builds a standardized name for the farm as a string. example: Farm_Fields[Field-0[Weather-0_Soil-0_Plant-0]]_Farmers[BasicFarmer-0]
         """
@@ -290,7 +290,7 @@ class Farm(gym.Env):
         str += "]"
         return str
 
-    def build_shortname(self):
+    def _build_shortname(self):
         """
         Builds a standardized name for the farm as a string. example: Farm_Fields[Field-0[Weather-0_Soil-0_Plant-0]]_Farmers[BasicFarmer-0]
         """
@@ -425,30 +425,6 @@ class Farm(gym.Env):
             obs
         ), reward, terminated, truncated, info
 
-    def farmgym_to_gym_observations(self, farmgym_observations):
-        gym_observations = []
-        for fo in farmgym_observations:
-            fa_key, fi_key, e_key, variable_key, path, value = fo
-            gym_value = (
-                self.fields[fi_key]
-                .entities[e_key]
-                .gym_observe_variable(variable_key, path)
-            )
-            g = {}
-            g[fa_key] = {}
-            g[fa_key][fi_key] = {}
-            g[fa_key][fi_key][e_key] = {}
-            g[fa_key][fi_key][e_key][variable_key] = {}
-            if path != []:
-                # print("PATH",str(path))
-                # TODO UPDATE for path=['min#°C',2]?
-                g[fa_key][fi_key][e_key][variable_key][str(path)] = gym_value
-            else:
-                g[fa_key][fi_key][e_key][variable_key] = gym_value
-            # gym_observations[str(fa_key)+"."+str(fi_key)+"."+str(e_key)+"."+str(variable_key)+"."+str(path)]=gym_value
-            gym_observations.append(g)
-        return gym_observations
-
     def gym_step_AOMDP(self, gym_action):
         """
         Performs a step evolution of the system, from current stage to next state given the input action.
@@ -484,7 +460,7 @@ class Farm(gym.Env):
         self.rules.assert_actions(filtered_action_schedule)
         if self.is_new_day:
             self.last_farmgym_action = (filtered_action_schedule, None)
-            output = self.observation_step(filtered_action_schedule)
+            output = self._observation_step(filtered_action_schedule)
             self.is_new_day = False
             return output
         else:
@@ -492,9 +468,37 @@ class Farm(gym.Env):
                 self.last_farmgym_action[0],
                 filtered_action_schedule,
             )
-            output = self.intervention_step(filtered_action_schedule)
+            output = self._intervention_step(filtered_action_schedule)
             self.is_new_day = True
             return output
+
+
+
+    def farmgym_to_gym_observations(self, farmgym_observations):
+        gym_observations = []
+        for fo in farmgym_observations:
+            fa_key, fi_key, e_key, variable_key, path, value = fo
+            gym_value = (
+                self.fields[fi_key]
+                .entities[e_key]
+                .gym_observe_variable(variable_key, path)
+            )
+            g = {}
+            g[fa_key] = {}
+            g[fa_key][fi_key] = {}
+            g[fa_key][fi_key][e_key] = {}
+            g[fa_key][fi_key][e_key][variable_key] = {}
+            if path != []:
+                # print("PATH",str(path))
+                # TODO UPDATE for path=['min#°C',2]?
+                g[fa_key][fi_key][e_key][variable_key][str(path)] = gym_value
+            else:
+                g[fa_key][fi_key][e_key][variable_key] = gym_value
+            # gym_observations[str(fa_key)+"."+str(fi_key)+"."+str(e_key)+"."+str(variable_key)+"."+str(path)]=gym_value
+            gym_observations.append(g)
+        return gym_observations
+
+
 
     def _get_day(self):
         return (int)(
@@ -507,7 +511,7 @@ class Farm(gym.Env):
     def _set_day_path(self, path):
         self.day_path = path
 
-    def observation_step(self, observation_schedule):
+    def _observation_step(self, observation_schedule):
         """
         Performs an observation step, one of the two types of farmgym steps.
         """
@@ -547,7 +551,7 @@ class Farm(gym.Env):
         }
         # return (observation, reward, terminated, truncated, info) or  (observation, reward, done, info)
 
-    def intervention_step(self, action_schedule):
+    def _intervention_step(self, action_schedule):
         """
         Performs an intervention step, one of the two types of farmgym steps.
         """
@@ -804,6 +808,13 @@ class Farm(gym.Env):
             return self.farmgym_observation_actions[n]
         return None
 
+
+    def count_farmgym_intervention_actions(self):
+        n = 0
+        for i in self.farmgym_intervention_actions:
+            n += i[6]
+        return n
+
     def build_farmgym_intervention_actions(self, action_yaml):
         """
         Generates a list of all possible farmgym intervention-actions allowed by the configuration file action_yaml.
@@ -871,11 +882,6 @@ class Farm(gym.Env):
                                         )
         return actions
 
-    def count_farmgym_intervention_actions(self):
-        n = 0
-        for i in self.farmgym_intervention_actions:
-            n += i[6]
-        return n
 
     def build_farmgym_observation_actions(self, action_yaml):
         """

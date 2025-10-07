@@ -1,0 +1,8 @@
+sprites:
+  some: 'fertilizer-some.png'
+N#%: 1
+K#%: 0
+P#%: 0
+C#%: 0
+base_absorption_speed#kg.week-1: 0.1
+bag#kg: 1.8

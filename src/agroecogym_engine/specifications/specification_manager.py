@@ -9,29 +9,27 @@ CURRENT_DIR = file_path.parent
 # CURRENT_DIR = file_path
 # print(type(CURRENT_DIR))
 
-
-def load_yaml(spec_file, parameter_string):
-    # spec_file=(class_.__class__.__name__).lower()+'_specifications.yaml'
+def load_yaml(spec_file):
+    # spec_file=(class_.__class__.__name__).lower()/entity_instance_name.yaml'
     # string = CURRENT_DIR / 'specifications'/spec_file
     string = CURRENT_DIR / spec_file
     with open(string, "r", encoding="utf8") as file:
         doc_yaml = yaml.safe_load(file)  # Note the safe_load
-        return doc_yaml[parameter_string]
-
+        return doc_yaml
 
 def load_weather_table(filename):
     if isinstance(filename, dict):
         tables = []
         alphas = []
         for k in filename.keys():
-            string = CURRENT_DIR / k
+            string = CURRENT_DIR / 'weather'/'data'/k
             # with open(string, 'r') as file:
             tables.append(pandas.read_csv(string))
             alphas.append(filename[k])
         return tables, alphas
     else:
         # string = CURRENT_DIR / 'specifications'/filename
-        string = CURRENT_DIR / filename
+        string = CURRENT_DIR / 'weather'/'data'/filename
         # with open(string, 'r') as file:
         table = pandas.read_csv(string)
         return [table], [1]

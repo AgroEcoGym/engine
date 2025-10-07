@@ -1,0 +1,13 @@
+sprites:
+  dry: 'soil-dry.png'
+  wet: 'soil-wet.png'
+depth#m: 0.5
+max_water_capacity#L.m-3: 250
+wilting_point#L.m-3: 12
+water_surface_absorption_speed#m2.day-1: 0.4
+total_evaporable_water#mm: 120
+water_leakage_max#L.m-3.day-1: 20
+bedrocks_release_N#mg.day-1: 0.1
+bedrocks_release_P#mg.day-1: 0.1
+bedrocks_release_K#mg.day-1: 0.1
+bedrocks_release_C#mg.day-1: 0.1

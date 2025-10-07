@@ -1,0 +1,9 @@
+basic_K:
+  sprites:
+    some: 'fertilizer-some.png'
+  N#%: 0
+  K#%: 1
+  P#%: 0
+  C#%: 0
+  base_absorption_speed#kg.week-1: 0.12
+  bag#kg: 2.1

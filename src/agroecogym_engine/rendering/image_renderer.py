@@ -43,11 +43,12 @@ def make_rendering_image(farm):
     offset_sep = font_size // 2
     offset_foot = font_size * 2
 
+    #print("Font dir",str(CURRENT_DIR) + "\Gidole-Regular.ttf")
     font = ImageFont.truetype(
-        str(CURRENT_DIR) + "/rendering/Gidole-Regular.ttf", size=font_size
+        str(CURRENT_DIR) + "\Gidole-Regular.ttf", size=font_size
     )
     font_action = ImageFont.truetype(
-        str(CURRENT_DIR) + "/rendering/Gidole-Regular.ttf",
+        str(CURRENT_DIR) + "\Gidole-Regular.ttf",
         size=im_width * XX // (18 * len(farm.fields)),
     )
 

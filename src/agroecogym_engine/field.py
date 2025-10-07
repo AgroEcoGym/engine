@@ -19,7 +19,7 @@ class Field:
     Parameters
     ----------
     localization: (latitude, longitude, altitude)
-        localisation of the field
+        localization of the field
 
     shape: (length (int), width (int), scale (multiples of 1 unit in meter))
         Shape of the field. Each field of shape (width,length,scale) contains width × length many plots each of size scale
