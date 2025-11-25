@@ -38,40 +38,40 @@ class Weather(Entity_API):
 
         self.variables["forecast"] = {
             "air_temperature": {
-                "mean#°C": np.full(
-                    self.parameters["forecast_lookahead"],
-                    fill_value=Range((-100, 100), 20.0),
-                ),
-                "min#°C": np.full(
-                    self.parameters["forecast_lookahead"],
-                    fill_value=Range((-100, 100), 18.0),
-                ),
-                "max#°C": np.full(
-                    self.parameters["forecast_lookahead"],
-                    fill_value=Range((-100, 100), 22.0),
-                ),
+                "mean#°C": np.array([
+            Range((-100, 100), 20.0)
+            for _ in range(self.parameters["forecast_lookahead"])
+        ]),
+                "min#°C": np.array([
+            Range((-100, 100), 18.0)
+            for _ in range(self.parameters["forecast_lookahead"])
+        ]),
+                "max#°C": np.array([
+            Range((-100, 100), 22.0)
+            for _ in range(self.parameters["forecast_lookahead"])
+        ]),
             },
-            "humidity#%": np.full(
-                self.parameters["forecast_lookahead"],
-                fill_value=Range((0.0, 100.0), 50.0),
-            ),
-            "clouds#%": np.full(
-                self.parameters["forecast_lookahead"],
-                fill_value=Range((0.0, 100.0), 0.0),
-            ),
-            "rain_amount#mm.day-1": np.full(
-                self.parameters["forecast_lookahead"],
-                fill_value=Range((0.0, 100.00), 0.0),
-            ),
+            "humidity#%": np.array([
+            Range((0., 100.), 50.0)
+            for _ in range(self.parameters["forecast_lookahead"])
+        ]),
+            "clouds#%": np.array([
+            Range((0., 100.), 0.0)
+            for _ in range(self.parameters["forecast_lookahead"])
+        ]),
+            "rain_amount#mm.day-1": np.array([
+            Range((0., 100.), 0.0)
+            for _ in range(self.parameters["forecast_lookahead"])
+        ]),
             "wind": {
-                "speed#km.h-1": np.full(
-                    self.parameters["forecast_lookahead"],
-                    fill_value=Range((0.0, 500), 0.0),
-                ),
-                "direction": np.full(
-                    self.parameters["forecast_lookahead"],
-                    fill_value=Range(list(range(360)), 0),
-                ),
+                "speed#km.h-1": np.array([
+            Range((0., 300.), 0.0)
+            for _ in range(self.parameters["forecast_lookahead"])
+        ]),
+                "direction": np.array([
+            Range(list(range(360)), 0)
+            for _ in range(self.parameters["forecast_lookahead"])
+        ]),
             },
         }
 
@@ -207,10 +207,10 @@ class Weather(Entity_API):
                 self.read_weathercsv(self.datakeys["T"], (day + i) % 365) + eps
             )
             self.variables["forecast"]["air_temperature"]["min#°C"][i].set_value(
-                self.read_weathercsv(self.datakeys["Tmin"], day % 365) + eps
+                self.read_weathercsv(self.datakeys["Tmin"], (day + i) % 365) + eps
             )
             self.variables["forecast"]["air_temperature"]["max#°C"][i].set_value(
-                self.read_weathercsv(self.datakeys["Tmax"], day % 365) + eps
+                self.read_weathercsv(self.datakeys["Tmax"], (day + i) % 365) + eps
             )
             eps = self.np_random.normal(
                 0,
@@ -219,7 +219,7 @@ class Weather(Entity_API):
                 1,
             )[0]
             self.variables["forecast"]["humidity#%"][i].set_value(
-                self.read_weathercsv(self.datakeys["H"], day % 365) + eps
+                self.read_weathercsv(self.datakeys["H"], (day + i) % 365) + eps
             )
             eps = self.np_random.normal(
                 0,
@@ -228,7 +228,7 @@ class Weather(Entity_API):
                 1,
             )[0]
             self.variables["forecast"]["wind"]["speed#km.h-1"][i].set_value(
-                self.read_weathercsv(self.datakeys["WS"], day % 365) + eps
+                self.read_weathercsv(self.datakeys["WS"], (day + i) % 365) + eps
             )
             eps = self.np_random.normal(
                 0,
@@ -237,7 +237,7 @@ class Weather(Entity_API):
                 1,
             )[0]
             self.variables["forecast"]["wind"]["direction"][i].set_value(
-                int(self.read_weathercsv(self.datakeys["WD"], day % 365) + eps) % 360
+                int(self.read_weathercsv(self.datakeys["WD"], (day + i) % 365) + eps) % 360
             )
             eps = self.np_random.normal(
                 0,
@@ -245,7 +245,7 @@ class Weather(Entity_API):
                 1,
             )[0]
             self.variables["forecast"]["clouds#%"][i].set_value(
-                self.read_weathercsv(self.datakeys["C"], day % 365) + eps
+                self.read_weathercsv(self.datakeys["C"], (day + i) % 365) + eps
             )
             eps = self.np_random.normal(
                 0,
@@ -254,7 +254,7 @@ class Weather(Entity_API):
                 1,
             )[0]
             self.variables["forecast"]["rain_amount#mm.day-1"][i].set_value(
-                self.read_weathercsv(self.datakeys["R"], day % 365) + eps
+                self.read_weathercsv(self.datakeys["R"], (day + i) % 365) + eps
             )
 
     def read_weathercsv(self, variable, day):
