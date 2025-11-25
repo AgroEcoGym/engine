@@ -1,9 +1,9 @@
 import numpy as np
 
-from agroecogym_engine.apis.entity_api import Entity_API, Range, fillarray
-from agroecogym_engine.utils.python import checkissubclass
+from agroecogym_engine.apis.entity_api import Entity_API, fillarray
+from agroecogym_engine.core.utils.python import checkissubclass
 
-class Plant2(Entity_API):
+class NewPlant(Entity_API):
     def __init__(self, field, parameters):
         Entity_API.__init__(self, field, parameters)
         X = self.field.X

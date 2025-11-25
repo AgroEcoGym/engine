@@ -41,7 +41,8 @@ class BasicRule(Rules_API):
                     "time.",
                 )
 
-        if farm.is_new_day:
+        if farm.state_manager.sim_core.is_observation_time:
+        #if farm.state_manager.sim_core.is_new_day:
             filtered = []
             total_cost = 0
             for observation_item in actions_schedule:

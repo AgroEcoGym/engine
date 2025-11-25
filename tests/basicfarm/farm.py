@@ -2,12 +2,13 @@ import os
 
 from tests.game_agents.basic_agents import Farmgym_RandomAgent
 from tests.game_builder.make_farm import make_farm
+#from agroecogym_engine.make_farm_new import make_farm
 from tests.game_builder.run_farm import run_gym_xp
 
 from agroecogym_engine.rendering.monitoring import make_variables_to_be_monitored
 
 def env():
-    yaml_path = os.path.join(os.path.dirname(__file__), "farm2.yaml")
+    yaml_path = os.path.join(os.path.dirname(__file__), "farm3.yaml")
     farm = make_farm(yaml_path)
     variables = ["f0>soil>available_Water#L",
                  "f0>weather>rain_amount#mm.day-1",
@@ -18,5 +19,10 @@ def env():
 
 
 if __name__ == "__main__":
+    farm = env()
+    farm.understand_the_farm()
+
     agent = Farmgym_RandomAgent()
-    run_gym_xp(env(), agent, max_steps=15, render="image")
+    run_gym_xp(env(), agent, max_steps=15, render="json")
+    # agent = Farmgym_RandomAgent()
+    # run_gym_xp(env(), agent, max_steps=15, render="images")

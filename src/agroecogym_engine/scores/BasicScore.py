@@ -7,7 +7,7 @@ from agroecogym_engine.apis.score_api import Score_API
 def compute_sizeobservation(variable):
     if type(variable) not in [dict, np.ndarray]:
         return 1
-    if isinstance(variable, dict()):
+    if isinstance(variable, dict):
         return sum([compute_sizeobservation(variable[a]) for a in variable.keys()])
     if type(variable) == np.ndarray:
         return sum(1 for x in np.nditer(variable, flags=["multi_index", "refs_ok"]))

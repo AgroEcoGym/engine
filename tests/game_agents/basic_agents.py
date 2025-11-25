@@ -27,7 +27,7 @@ class Farmgym_RandomAgent(Farmgym_Agent):
 
     def get_harvest_index(self, n_obs, n_act):
         for i in range(n_obs, n_act):
-            a = self.farm.gymaction_to_discretized_farmgymaction([i])
+            a = self.farm.action_converter.gymaction_to_discretized_farmgymaction([i])
             fa, fi, e, a, p = a[0]
             if a == "harvest":
                 return [i]
@@ -55,9 +55,28 @@ class Farmgym_PolicyAgent(Farmgym_Agent):
     def update(self, obs, reward, terminated, truncated, info):
         self.observation = obs
     def choose_action(self):
-        if (self.farm.is_new_day):
+        if (self.farm.is_observation_time):
             schedule= self.policy.observation_schedule(self.observation)
         else:
             schedule= self.policy.intervention_schedule(self.observation)
+        print("AGENT:", schedule) #TODO: Convert from FarmGym [('BasicFarmer-0', 'Field-0', 'Plant-0', 'stage', [(0, 0)]),..]  to Gym [4,...]
+        return schedule
+
+
+class Farmgym_TriggeredPolicyAgent(Farmgym_Agent):
+    def __init__(self, triggeredpolicy):
+        super(Farmgym_PolicyAgent, self).__init__()
+        self.policy = triggeredpolicy
+        self.observation = []
+
+    def update(self, obs, reward, terminated, truncated, info):
+        self.policy.update()
+        self.observation = obs
+    def choose_action(self):
+        obs_schedule,int_schedule= self.policy.action(self.observation)
+        if (self.farm.is_observation_time):
+            schedule= obs_schedule
+        else:
+            schedule= int_schedule
         print("AGENT:", schedule) #TODO: Convert from FarmGym [('BasicFarmer-0', 'Field-0', 'Plant-0', 'stage', [(0, 0)]),..]  to Gym [4,...]
         return schedule

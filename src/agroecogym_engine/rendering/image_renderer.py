@@ -163,10 +163,10 @@ def make_rendering_image(farm):
         )
 
         nb_a = 0
-        if farm.last_farmgym_action:
+        if farm.state_manager.sim_core.last_farmgym_action:
             # print("LAST ACTION", farm.is_new_day, farm.last_farmgym_action)
-            mor, aft = farm.last_farmgym_action
-            if farm.is_new_day:
+            mor, aft = farm.state_manager.sim_core.last_farmgym_action
+            if farm.state_manager.sim_core.is_observation_time:
                 actions = aft
             else:
                 actions = mor

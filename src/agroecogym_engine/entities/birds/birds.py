@@ -1,7 +1,7 @@
 from PIL import Image
 
 from agroecogym_engine.apis.entity_api import Entity_API, Range
-from agroecogym_engine.utils.python import checkissubclass
+from agroecogym_engine.core.utils.python import checkissubclass
 
 
 class Birds(Entity_API):

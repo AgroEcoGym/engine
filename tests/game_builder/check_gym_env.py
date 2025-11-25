@@ -7,7 +7,7 @@ from typing import Optional, Union
 
 import gymnasium as gym
 import numpy as np
-from agroecogym_engine.utils.gymUnion import MultiUnion
+from agroecogym_engine.core.utils.gymUnion import MultiUnion
 from gymnasium import logger, spaces
 
 

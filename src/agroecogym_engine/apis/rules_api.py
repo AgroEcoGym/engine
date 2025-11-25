@@ -132,6 +132,7 @@ class Rules_API:
         allowed_actions = self.actions_allowed
 
         def check(dic, param):
+            #print("ACT", act, p)
             if dic is None:
                 return True
             if len(param) > 0:
@@ -140,7 +141,8 @@ class Rules_API:
                         return False
                     return check(dic[param[0]], param[1:])
                 else:
-                    if str(param[0]) not in dic:
+                    if str(param[0]) not in [str(x) for x in dic]: #TODO: enough for 1 in [1,2,3] and (1,0) in ['(0,0), '(1,0)']. Check exectuted indeed.
+                        #rint(str(param[0])," not in ", dic)
                         return False
                     else:
                         return True
@@ -150,7 +152,7 @@ class Rules_API:
                 return dic == {}
 
         fa, fi, e, a, p = action
-        if not isinstance(p, list):  # Intervention
+        if isinstance(p, dict):  # Intervention
             if is_observation_time:
                 return False
             env_space = allowed_actions["interventions"]
@@ -179,8 +181,8 @@ class Rules_API:
                         # print("ENT", ent)
                         if a in ent.keys():
                             act = ent[a]
-                            # print("ACT", act, p)
                             return check(act, p)
+        print("[Farmgym:Rules] Unexpected action format", action)
         return False
 
     def assert_actions(self, actions):

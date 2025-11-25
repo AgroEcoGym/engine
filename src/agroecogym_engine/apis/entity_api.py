@@ -4,6 +4,7 @@ from gymnasium.spaces import Box, Discrete
 from PIL import Image
 
 from agroecogym_engine.specifications.specification_manager import load_yaml
+import numbers
 
 class Range:
     def __init__(self, range, value):
@@ -22,8 +23,10 @@ class Range:
                     self.value = None
 
     def set_value(self, value):
-        if type(self.range) == tuple:
-            self.value = max(self.min, min(self.max, value))
+        if (type(self.range) == tuple):
+            if (isinstance(value, numbers.Real)):
+                self.value = max(self.min, min(self.max, value))
+            else: self.value = self.default_value
         elif value in self.range:
             self.value = value
 
@@ -313,7 +316,7 @@ class Entity_API:
                 s += "]\n"
             elif type(x) in [Range]:
                 s += str(x) + "\n"
-            else:
+            else: # This is not an array, not a Range, so it must be Null.
                 s += "???\n"
             return s
 

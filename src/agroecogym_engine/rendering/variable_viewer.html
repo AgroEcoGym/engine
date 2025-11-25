@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="fr" x-data="farmViewer()" x-init="init()">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>AgroEcoGym Interactive Viewer</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+  <style>
+    .panel { background:white; border-radius:0.5rem; padding:1rem; box-shadow:0 2px 4px rgba(0,0,0,0.1); }
+    .entity-btn { padding:.35rem .6rem; border-radius:.375rem; background:#bfdbfe; cursor:pointer; font-weight:600; }
+    .variable-btn { padding:.25rem .45rem; border-radius:.375rem; background:#bbf7d0; cursor:pointer; font-size:.9rem; }
+    .variable-btn.active { background:#86efac !important; }
+    .small { font-size:.85rem; color:#6b7280; }
+  </style>
+</head>
+<body class="bg-gray-100 p-6">
+
+<div class="max-w-7xl mx-auto space-y-6">
+
+  <header class="flex items-center justify-between">
+    <h1 class="text-2xl font-bold">🌱 AgroEcoGym Interactive Viewer</h1>
+    <div class="text-sm text-gray-600">Chargez un fichier JSON d'historique et explorez les séries.</div>
+  </header>
+
+  <!-- File loader -->
+  <div class="panel flex items-center gap-4">
+    <div>
+      <label class="font-semibold">Charger un fichier JSON :</label>
+      <input type="file" accept="application/json" @change="loadJSON($event)" />
+    </div>
+    <div class="ml-4">
+      <button class="px-3 py-1 bg-gray-200 rounded" @click="loadDemo()">Load demo</button>
+    </div>
+    <div class="ml-auto small">Days: <span x-text="nDays"></span></div>
+  </div>
+
+  <div class="grid grid-cols-3 gap-6">
+
+    <!-- LEFT: rendering -->
+    <div class="panel col-span-2">
+      <h2 class="text-lg font-semibold mb-2">Field Rendering</h2>
+      <div class="mb-3 small text-gray-600">Si vos images sont fournies, mettez-les dans `images[]` ou adaptez le loader.</div>
+      <img x-ref="renderImg" class="rounded border w-full" alt="field render" />
+    </div>
+
+    <!-- RIGHT: tree menu -->
+    <div class="panel overflow-auto">
+      <h2 class="text-lg font-semibold mb-3">Entities & Variables</h2>
+
+      <template x-for="(vars, entityName) in entityLeaves" :key="entityName">
+        <div class="mb-4">
+          <div class="flex items-center justify-between">
+            <div class="entity-btn" @click="toggleEntity(entityName)" x-text="entityName"></div>
+            <div class="small" x-show="isEntityOpen(entityName)">vars: <span x-text="Object.keys(vars).length"></span></div>
+          </div>
+
+          <div class="ml-4 mt-3 space-y-2" x-show="isEntityOpen(entityName)">
+            <template x-for="(info, leafDisplay) in vars" :key="leafDisplay">
+              <div class="flex items-center gap-3">
+                <button class="variable-btn" :class="isPlotted(info.fullPath) ? 'active' : ''"
+                        @click="toggleVariableByPath(info.fullPath)">
+                  <span x-text="isPlotted(info.fullPath) ? '−' : '+'"></span>
+                </button>
+
+                <div class="flex-1">
+                  <div class="font-medium text-sm" x-text="leafDisplay"></div>
+                  <div class="small">value: <span x-text="formatValue(info.value)"></span></div>
+                </div>
+              </div>
+            </template>
+          </div>
+        </div>
+      </template>
+    </div>
+
+  </div>
+
+  <!-- Slider -->
+  <div class="panel">
+    <label class="font-semibold">Day: <span x-text="currentDay"></span></label>
+    <input type="range" min="0" :max="Math.max(0,nDays-1)" class="w-full mt-2" x-model.number="currentDay"
+           @input="onDayChange()" />
+  </div>
+
+  <!-- Plots -->
+  <div class="panel">
+    <h2 class="text-lg font-semibold mb-3">Variable Time Series</h2>
+
+    <div id="plotsContainer" class="space-y-6">
+      <!-- plottedVars is an object mapping fullPath -> true -->
+      <template x-for="(on, fullPath) in plottedVars" :key="fullPath">
+        <div x-show="on" class="border rounded p-3 bg-gray-50">
+          <div class="flex items-center justify-between mb-2">
+            <div class="font-medium" x-text="figureName(fullPath)"></div>
+            <div class="small">current: <span x-text="formatValue(valueAtPath(states[String(currentDay)], fullPath))"></span></div>
+          </div>
+          <div :id="figureId(fullPath)" style="height:320px;"></div>
+        </div>
+      </template>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function farmViewer(){
+  return {
+    states: {},          // loaded JSON: day -> field -> entity -> ... -> leaf
+    nDays: 0,
+    currentDay: 0,
+    images: [],          // optional: can be filled by loader
+    fieldRootName: null, // the field name chosen from the day (first key)
+    entityLeaves: {},    // { entityName: { displayLeafName: { fullPath, value } } }
+    entityOpen: {},      // ui state
+    plottedVars: {},     // { fullPath: true } active plots
+
+    init(){
+      // initial demo load
+      this.loadDemo();
+    },
+
+    /* ---------------- Loading / tree building ---------------- */
+
+    loadDemo(){
+      // simple demo data (same shape as earlier fake)
+      const demo = {};
+      const n = 12;
+      for (let d=0; d<n; d++){
+        demo[String(d)] = {
+          "Field-0": {
+            "Weather-0": {
+              "year#int100": 1,
+              "day#int365": d,
+              "air_temperature": {
+                "max#°C": 9.8 + Math.sin(d),
+                "min#°C": 3.2 + Math.cos(d/2)
+              }
+            },
+            "Crop-0": {
+              "wheat": {
+                "height": 10 + d*1.5,
+                "biomass": 2 + 0.5*d
+              }
+            }
+          }
+        };
+      }
+      this.states = demo;
+      this.nDays = Object.keys(this.states).length;
+      this.currentDay = 0;
+      // optional images
+      this.images = Object.keys(this.states).map((k,i)=>`data:image/svg+xml;base64,${btoa('<svg xmlns="http://www.w3.org/2000/svg" width="900" height="300"><rect width="900" height="300" fill="rgb('+(120+i*6)+',180,130)"/><text x="28" y="48" font-size="32" fill="white">Field render — Day '+i+'</text></svg>')}`);
+      this.rebuildEntityTree();
+      this.updateView();
+    },
+
+    loadJSON(event){
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        try {
+          const parsed = JSON.parse(e.target.result);
+          this.states = parsed;
+          this.nDays = Object.keys(this.states).length;
+          this.currentDay = 0;
+          // no images by default
+          this.images = Object.keys(this.states).map(()=>'');
+          this.rebuildEntityTree();
+          this.updateView();
+        } catch(err){
+          console.error("Erreur JSON:",err);
+          alert("Impossible de parser le JSON: voir la console.");
+        }
+      };
+      reader.readAsText(file, "utf-8");
+    },
+
+    rebuildEntityTree(){
+      // Build entityLeaves for the current day
+      const dayKey = String(this.currentDay);
+      if (!this.states || !this.states[dayKey]){
+        this.entityLeaves = {};
+        this.fieldRootName = null;
+        return;
+      }
+      const dayObj = this.states[dayKey];
+      // choose first top-level key as field root (consistent with your exporter)
+      const fieldNames = Object.keys(dayObj);
+      if (fieldNames.length === 0){
+        this.entityLeaves = {};
+        this.fieldRootName = null;
+        return;
+      }
+      this.fieldRootName = fieldNames[0];
+      const fieldObj = dayObj[this.fieldRootName];
+
+      // For each first-level entity under the field, gather its numeric leaves
+      const leavesForEntity = {};
+      for (const [entityName, entityObj] of Object.entries(fieldObj)){
+        const collected = {}; // displayName -> { fullPath, value }
+        // gather recursively leaves under this entity
+        const recurse = (node, pathParts) => {
+          if (node === null || node === undefined) return;
+          if (typeof node === 'number' || typeof node === 'boolean' || typeof node === 'string' && !isNaN(Number(node)) ) {
+            // leaf numeric-like -> record
+            const fullPathParts = [this.fieldRootName, entityName, ...pathParts];
+            const fullPath = fullPathParts.join('.');
+            const display = pathParts.length ? pathParts.join('.') : pathParts[0] || '(value)';
+            // display name: last path if there are multiple; prefer readable
+            const displayName = pathParts.length ? pathParts[pathParts.length-1] : Object.keys(node)[0] || "(value)";
+            // safer: use joined path after entity for display
+            const displayJoined = pathParts.join('.');
+            const finalDisplay = displayJoined || '(value)';
+            collected[finalDisplay] = { fullPath: fullPath, value: node };
+            return;
+          }
+          if (typeof node === 'object') {
+            for (const [k, v] of Object.entries(node)){
+              recurse(v, [...pathParts, k]);
+            }
+          }
+        };
+
+        recurse(entityObj, []);
+        // only keep if we found leaves
+        if (Object.keys(collected).length > 0) leavesForEntity[entityName] = collected;
+      }
+
+      this.entityLeaves = leavesForEntity;
+
+      // initialize open flags for UI (if missing)
+      for (const en of Object.keys(this.entityLeaves)){
+        if (this.entityOpen[en] === undefined) this.entityOpen[en] = false;
+      }
+    },
+
+    /* ---------------- Utility helpers ---------------- */
+
+    // safe path value extraction: path is 'Field-0.Weather-0.air_temperature.max#°C'
+    valueAtPath(obj, path){
+      if (!obj || !path) return null;
+      const parts = path.split('.');
+      let cur = obj;
+      for (const p of parts){
+        if (cur === undefined || cur === null) return null;
+        cur = cur[p];
+      }
+      return cur;
+    },
+
+    // safe id generator
+    figureId(path){
+      return 'fig_' + String(path).replace(/[^a-zA-Z0-9_-]/g,'_');
+    },
+
+    // pretty name for displayed figure (without leading field)
+    figureName(path){
+      if (!this.fieldRootName) return path;
+      if (path.startsWith(this.fieldRootName + '.')) return path.slice(this.fieldRootName.length + 1);
+      return path;
+    },
+
+    formatValue(v){
+      if (v === null || v === undefined) return '—';
+      if (typeof v === 'number') return v.toFixed(3);
+      return String(v);
+    },
+
+    /* ---------------- UI interactions ---------------- */
+
+    toggleEntity(name){
+      this.entityOpen[name] = !this.entityOpen[name];
+    },
+    isEntityOpen(name){ return !!this.entityOpen[name]; },
+
+    // check if fullPath is plotted
+    isPlotted(fullPath){ return !!this.plottedVars[fullPath]; },
+
+    toggleVariableByPath(fullPath){
+      const id = this.figureId(fullPath);
+      if (this.plottedVars[fullPath]) {
+        // turn off
+        const el = document.getElementById(id);
+        if (el) {
+          try { Plotly.purge(el); } catch(e){/*ignore*/ }
+        }
+        delete this.plottedVars[fullPath];
+      } else {
+        // turn on
+        this.plottedVars[fullPath] = true;
+        // prepare arrays
+        const days = Object.keys(this.states).map(Number).sort((a,b)=>a-b);
+        const values = days.map(d => this.valueAtPath(this.states[String(d)], fullPath));
+        // wait DOM
+        this.$nextTick(()=> {
+          const el = document.getElementById(id);
+          if (!el) return;
+          Plotly.newPlot(el, [{
+            x: days, y: values, type: 'scatter', mode:'lines+markers', name: this.figureName(fullPath)
+          }], {
+            margin:{t:20,r:10,l:40,b:40},
+            xaxis:{title:'Day', range: [0, Math.max(0, days.length-1)]},
+            yaxis:{title: fullPath.split('.').pop()},
+            shapes: [{
+              type:'line', x0: this.currentDay, x1: this.currentDay,
+              y0: Math.min(...(values.filter(v=>v!==null && v!==undefined))),
+              y1: Math.max(...(values.filter(v=>v!==null && v!==undefined))),
+              line:{color:'red', width:2, dash:'dot'}
+            }]
+          }, {displayModeBar:false});
+        });
+      }
+    },
+
+    /* move vertical line on every active plot - efficient with relayout */
+    updateCurrentDay(){
+      const days = Object.keys(this.states).map(Number).sort((a,b)=>a-b);
+      for (const fullPath of Object.keys(this.plottedVars)){
+        const id = this.figureId(fullPath);
+        const el = document.getElementById(id);
+        if (!el) continue;
+        const values = days.map(d => this.valueAtPath(this.states[String(d)], fullPath)).filter(v=>v!==null && v!==undefined);
+        const ymin = values.length ? Math.min(...values) : 0;
+        const ymax = values.length ? Math.max(...values) : 1;
+        try {
+          Plotly.relayout(el, {
+            'shapes[0].x0': this.currentDay,
+            'shapes[0].x1': this.currentDay,
+            'shapes[0].y0': ymin,
+            'shapes[0].y1': ymax
+          });
+        } catch(e){ /* ignore */ }
+      }
+    },
+
+    onDayChange(){
+      // rebuild entityLeaves so displayed values update (they come from entityLeaves)
+      this.rebuildEntityTree();
+      // update small rendering image (if any)
+      this.updateView();
+      // move vertical lines
+      this.updateCurrentDay();
+    },
+
+    updateView(){
+      // set image if available
+      const idx = Math.max(0, Math.min(this.currentDay, this.images.length-1));
+      if (this.$refs && this.$refs.renderImg) this.$refs.renderImg.src = this.images[idx] || '';
+    }
+
+  };
+}
+</script>
+
+</body>
+</html>

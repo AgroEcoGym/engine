@@ -1,11 +1,9 @@
-import sys
-
 import yaml
 
 ## The following import lines are import for the make_farm function that uses inspection module!
 from agroecogym_engine.farm import Farm
 from agroecogym_engine.actors.farmers.BasicFarmer import BasicFarmer
-from agroecogym_engine.field import Field
+from agroecogym_engine.core.structure.field import Field
 from agroecogym_engine.actors.actionrules.BasicRule import BasicRule
 from agroecogym_engine.scores.BasicScore import BasicScore
 import agroecogym_engine.entities as entities_

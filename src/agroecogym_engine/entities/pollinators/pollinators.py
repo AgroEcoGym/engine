@@ -2,8 +2,8 @@ import numpy as np
 from PIL import Image
 
 from agroecogym_engine.apis.entity_api import Entity_API, Range, fillarray
-from agroecogym_engine.utils.python import checkissubclass
-from agroecogym_engine.utils.transitions import expglm
+from agroecogym_engine.core.utils.python import checkissubclass
+from agroecogym_engine.core.utils.transitions import expglm
 
 
 class Pollinators(Entity_API):

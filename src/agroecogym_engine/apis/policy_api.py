@@ -4,6 +4,129 @@ import random
 from typing import NamedTuple
 
 
+
+class TriggeredPolicy:
+    """
+    Class used to define an expert policy. Expert policies can then be attached to a farm.
+    """
+
+    def __init__(self, triggered_actions):
+        #TODO: Add exlanation on triggered_observations,  triggered_interventions:
+        # triggered_observations = list of (trigger, actions)
+        # triggered_interventions =  list of (trigger, action_dic) where action_dic={"action":action,"delay":value}
+        self.triggered_actions = triggered_actions #Interventions may happen with a delay.
+        self.delayed_actions = []
+
+    def reset(self):
+        self.delayed_actions = []
+
+    def action_schedule(self, observations):
+        """
+        "And" conditions  [(),()]
+        "or" conditions  [()],[()]
+        """
+        # observations: list of (farmer,field,entity,variable,path,value)
+        # contains all free observations, hence current day as minimum info.
+        observation_schedule = []
+        intervention_schedule = []
+        for trigger, actions in self.triggered_actions:
+            # Trigger is CNF
+            trigger_on = self.is_trigger_on(trigger, observations)
+            if trigger_on:
+                # [action_schedule.append(action) for action in actions]
+                [self.delayed_actions.append(copy.copy(action)) for action in actions]
+
+        for action in reversed(self.delayed_actions):
+            if action["delay"] == 0:
+                if (action["type"]=="observation") and (action["action"]!=[]):
+                    observation_schedule.append(action["action"])
+                if (action["type"]=="intervention"):
+                    intervention_schedule.append(action["action"])
+        return observation_schedule,intervention_schedule
+
+    def update(self):
+        for action in reversed(self.delayed_actions):
+            if action["delay"] == 0:
+                self.delayed_actions.remove(action)
+            else:
+                action["delay"] = action["delay"] - 1
+
+
+    def is_trigger_on(self, trigger, observations):
+        ## Check Breaks
+        if trigger == [[]]:
+            return True
+        for and_conditions in trigger:
+            bool_cond = True
+            observation_exists = False
+            for condition in and_conditions:
+                for ob in observations:
+                    farm, field, entity, variable, path, v = ob
+                    variable_path, fun, operator, value = condition
+                    if variable_path == (field, entity, variable, path):
+                        observation_exists = True
+                        if operator == "==":
+                            bool_cond = bool_cond and fun(v) == value
+                        elif operator == "!=":
+                            bool_cond = bool_cond and fun(v) != value
+                        elif operator == "<=":
+                            bool_cond = bool_cond and fun(v) <= value
+                        elif operator == ">=":
+                            bool_cond = bool_cond and fun(v) >= value
+                        elif operator == "<":
+                            bool_cond = bool_cond and fun(v) < value
+                        elif operator == ">":
+                            bool_cond = bool_cond and fun(v) > value
+                        elif operator == "in":
+                            bool_cond = bool_cond and fun(v) in value
+                        elif operator == "ni":
+                            bool_cond = bool_cond and value in fun(v)
+                        elif operator == "not in":
+                            bool_cond = bool_cond and fun(v) not in value
+                        elif operator == "not ni":
+                            bool_cond = bool_cond and value not in fun(v)
+                        else:
+                            bool_cond = False
+            if bool_cond and observation_exists:
+                return True
+        return False
+
+    def __add__(self, other):
+        # TODO: This does not seem to be the correct semantics:
+        #  {(if ai then bi), i=1..K} here seems to become (a1 or ... aK) then (b1 and ... and bK)
+        #  Is is the case? Is it what we want?
+        # but this is rather (ai,bi) list: in which case concatening is ok.
+        combined_actions = self.triggered_actions + other.triggered_actions
+
+        combined = Policy_API(combined_actions)
+        combined.reset = lambda: (self.reset(), other.reset())
+        combined.update = lambda: (self.update(), other.update())
+        combined.action_schedule = lambda obs: TriggeredPolicy.__combined(obs, [self,other])
+        return combined
+
+    @classmethod
+    def combine_policies(cls, policies):
+        combined_actions = []
+        for policy in policies:
+            combined_actions.extend(policy.triggered_actions)
+
+        combined = cls(combined_actions)
+        combined.reset = lambda: [p.reset() for p in policies]
+        combined.update = lambda: [p.update() for p in policies]
+        combined.action_schedule = lambda obs: TriggeredPolicy.__combined(obs, policies)
+
+        return combined
+
+    def __combined(obs,policies):
+        outs, ins = [], []
+        for p in policies:
+            o, i = p.action_schedule(obs)
+            outs.extend(o)
+            ins.extend(i)
+        return outs, ins
+
+
+
 class Policy_API:
     """
     Class used to define an expert policy. Expert policies can then be attached to a farm.
@@ -199,20 +322,20 @@ class Policy_helper:
 
     # Single policies
 
-    def create_policyfromaction(self, action, frequency, delay):
-        policy_condition = [
-            [
-                (
-                    ("Field-0", "Weather-0", "day#int365", []),
-                    lambda x: x % frequency,
-                    "==",
-                    0,
-                )
-            ]
-        ]
-        policy_action = [{"action": action, "delay": delay}]
-        policy = Policy_API(policy_condition, policy_action)
-        return policy
+    # def create_policyfromaction(self, action, frequency, delay):
+    #     policy_condition = [
+    #         [
+    #             (
+    #                 ("Field-0", "Weather-0", "day#int365", []),
+    #                 lambda x: x % frequency,
+    #                 "==",
+    #                 0,
+    #             )
+    #         ]
+    #     ]
+    #     policy_action = [{"action": action, "delay": delay}]
+    #     policy = Policy_API(policy_condition, policy_action)
+    #     return policy
 
     def create_plant_observe(self, field=0, index=0, location=(0, 0)):
         """
@@ -949,14 +1072,16 @@ def run_policy_xp(farm, policy, max_steps=10000, show_actions=False):
     i = 0
     while (not terminated) and i <= max_steps:
         i += 1
-        observations = farm.get_free_observations()
+        observations = farm.state_manager.sim_core.get_free_observations()
         observation_schedule = policy.observation_schedule(observations)
-        observation, _, _, _, info = farm.farmgym_step(observation_schedule)
+        if show_actions:
+            print(f"Day = {i}, Observation-actions : {observation_schedule}")
+        observation, _, _, _, info = farm.state_manager.sim_core.farmgym_step(observation_schedule)
         obs_cost = info["observation cost"]
         intervention_schedule = policy.intervention_schedule(observation)
         if show_actions:
-            print(f"Day = {i}, Actions : {intervention_schedule}")
-        obs, reward, terminated, truncated, info = farm.farmgym_step(
+            print(f"Day = {i}, Intervention-actions : {intervention_schedule}")
+        obs, reward, terminated, truncated, info = farm.state_manager.sim_core.farmgym_step(
             intervention_schedule
         )
         int_cost = info["intervention cost"]

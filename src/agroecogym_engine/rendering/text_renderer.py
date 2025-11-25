@@ -2,12 +2,14 @@
 def render_step(farm, action, observation, reward, terminated, truncated, info):
     # Called after a step.
     s = "Farm:\t" + farm.shortname + "\t"
-    if farm.is_new_day:  # Assumes it just switch from False to True
-        s += "\tAfternoon phase (interventions)\n"
+    if farm.state_manager.sim_core.is_observation_time:  # Assumes it just switch from False to True
+    #if farm.state_manager.sim_core.is_new_day:  # Assumes it just switch from False to True
+        s += "\nPhase II: Intervention\n"
     else:
-        s += "\tMorning phase (observations)\n"
+        s += "\nPhase I: Observation\n"
     s += "Actions planned: " + str(action) + "\n"
-    for a in farm.gymaction_to_discretized_farmgymaction(action):
+    #for a in farm.action_converter.gymaction_to_discretized_farmgymaction(action):
+    for a in farm.action_converter.gymaction_to_discretized_farmgymaction(action):
         s += "\t- " + str(a) + "\n"
     s += "Observations received:\n"
     for o in observation:
