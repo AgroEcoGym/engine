@@ -1,5 +1,5 @@
 
-def render_step(farm, action, observation, reward, terminated, truncated, info):
+def render_step_text(farm, action, observation, reward, terminated, truncated, info):
     # Called after a step.
     s = "Farm:\t" + farm.shortname + "\t"
     if farm.state_manager.sim_core.is_observation_time:  # Assumes it just switch from False to True
@@ -22,4 +22,6 @@ def render_step(farm, action, observation, reward, terminated, truncated, info):
         s += "Terminated.\n"
     if truncated:
         s += "Truncated.\n"
-    return s
+    print(s)
+
+

@@ -30,6 +30,11 @@ class SimulationCore:
             "entity": "Weather-0",
             "variable": "day#int365",
         }
+        self.year_path = {
+            "field": "Field-0",
+            "entity": "Weather-0",
+            "variable": "year#int100",
+        }
         self.is_observation_time = True
 
 
@@ -38,6 +43,15 @@ class SimulationCore:
             self.env.fields[self.day_path["field"]]
             .entities[self.day_path["entity"]]
             .variables[self.day_path["variable"]]
+            .value
+        )
+
+
+    def _get_year(self):
+        return (int)(
+            self.env.fields[self.year_path["field"]]
+            .entities[self.year_path["entity"]]
+            .variables[self.year_path["variable"]]
             .value
         )
 
@@ -202,7 +216,7 @@ class SimulationCore:
             for f in self.env.fields.values():
                 reward += self.env.scoring.final_reward(f.entities.values())
             if self.env.monitor is not None:
-                self.env.monitor.stop()
+                self.env.monitor.close()
 
         # Add free observations if any
         obs_vec = self.get_free_observations()

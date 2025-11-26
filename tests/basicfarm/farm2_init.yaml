@@ -15,7 +15,7 @@ Initial:
 
 Terminal:
   [
-    [{state_variable: ["Field-0", "Weather-0", "day#int365", []], function: "value", operator: ">=", ref_value: 360}],
+    [{state_variable: ["Field-0", "Weather-0", "day#int365", []], function: "value", operator: ">=", ref_value: 10}, {state_variable: ["Field-0", "Weather-0", "year#int100", []], function: "value", operator: ">=", ref_value: 2} ],
     [{state_variable: ["Field-0", "Plant-0", "global_stage", []], function: "value", operator: "==", ref_value: "harvested"}],
     [{state_variable: ["Field-0", "Plant-0", "global_stage", []], function: "value", operator: "==", ref_value: "dead"}],
   ]

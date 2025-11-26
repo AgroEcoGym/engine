@@ -1,50 +1,71 @@
 
 
-def run_AOMDP(farm,agent):
+def run(farm,agent,render_mode="human"):
+    if farm.interaction_mode == "POMDP":
+        run_POMDP(farm,agent,render_mode)
+    elif farm.interaction_mode == "AOMDP":
+        run_AOMDP(farm,agent,render_mode)
+
+def run_AOMDP(farm,agent,render_mode="human"):
+    farm.set_render_mode(render_mode)
+    agent.init(farm)
 
     observation, info = farm.reset() # Receives free observations
     agent.reset(observation)
 
     episode_over = False
     total_reward = 0
+    total_cost = 0
 
     while not episode_over:
+        farm.render()
+
         # Observation time:
         observation_action = agent.choose_observation()
         observation, reward, terminated, truncated, info = farm.step(observation_action) # Receives requested observations
-        agent.update(observation_action,reward,observation)
+        agent.update(observation_action,reward,observation,info)
+        total_cost += info["observation cost"]
 
         #Intervention time:
         intervention_action = agent.choose_intervention()
         observation, reward, terminated, truncated, info = farm.step(intervention_action) # Receives next free observations
-        agent.update(intervention_action,reward,observation)
+        agent.update(intervention_action,reward,observation,info)
+        total_cost += info["intervention cost"]
 
         total_reward += reward
         episode_over = terminated or truncated
 
-    print(f"Episode finished! Total reward: {total_reward}")
+    print(f"Episode finished! Total reward: {total_reward}, Total cost:{total_cost}")
+    farm.render()
     farm.close()
 
 
-def run_POMDP(farm,agent):
+def run_POMDP(farm,agent,render_mode="human"):
+    farm.set_render_mode(render_mode)
+    agent.init(farm)
 
     observation, info = farm.reset()
     agent.reset(observation)
 
     episode_over = False
     total_reward = 0
+    total_cost = 0
 
     while not episode_over:
+        farm.render()
+
         #Intervention time:
         intervention_action = agent.choose_intervention()
         observation, reward, terminated, truncated, info = farm.step(intervention_action)
-        agent.update(intervention_action,reward,observation)
+        agent.update(intervention_action,reward,observation,info)
+        total_cost += info["intervention cost"]
 
         total_reward += reward
         episode_over = terminated or truncated
 
-    print(f"Episode finished! Total reward: {total_reward}")
+    farm.render()
     farm.close()
+    print(f"Episode finished! Total reward: {total_reward}, Total cost:{total_cost}")
 
 
 def run_policy_xp(farm, triggeredpolicy, max_steps=10000, show_actions=False):

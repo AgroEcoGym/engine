@@ -401,7 +401,7 @@ class MonitorPlt:
             plt.show(block=False)
         plt.pause(0.1)
 
-    def stop(self):
+    def close(self):
         plt.savefig(self.filename)
 
 

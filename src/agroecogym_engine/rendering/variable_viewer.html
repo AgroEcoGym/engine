@@ -96,7 +96,7 @@
         <div x-show="on" class="border rounded p-3 bg-gray-50">
           <div class="flex items-center justify-between mb-2">
             <div class="font-medium" x-text="figureName(fullPath)"></div>
-            <div class="small">current: <span x-text="formatValue(valueAtPath(states[String(currentDay)], fullPath))"></span></div>
+            <div class="small">current: <span x-text="formatValue(valueAtPath(states[String(currentDay)]['state'], fullPath))"></span></div>
           </div>
           <div :id="figureId(fullPath)" style="height:320px;"></div>
         </div>
@@ -188,7 +188,7 @@ function farmViewer(){
         this.fieldRootName = null;
         return;
       }
-      const dayObj = this.states[dayKey];
+      const dayObj = this.states[dayKey]["state"];
       // choose first top-level key as field root (consistent with your exporter)
       const fieldNames = Object.keys(dayObj);
       if (fieldNames.length === 0){
@@ -295,7 +295,7 @@ function farmViewer(){
         this.plottedVars[fullPath] = true;
         // prepare arrays
         const days = Object.keys(this.states).map(Number).sort((a,b)=>a-b);
-        const values = days.map(d => this.valueAtPath(this.states[String(d)], fullPath));
+        const values = days.map(d => this.valueAtPath(this.states[String(d)]["state"], fullPath));
         // wait DOM
         this.$nextTick(()=> {
           const el = document.getElementById(id);
@@ -324,7 +324,7 @@ function farmViewer(){
         const id = this.figureId(fullPath);
         const el = document.getElementById(id);
         if (!el) continue;
-        const values = days.map(d => this.valueAtPath(this.states[String(d)], fullPath)).filter(v=>v!==null && v!==undefined);
+        const values = days.map(d => this.valueAtPath(this.states[String(d)]["state"], fullPath)).filter(v=>v!==null && v!==undefined);
         const ymin = values.length ? Math.min(...values) : 0;
         const ymax = values.length ? Math.max(...values) : 1;
         try {

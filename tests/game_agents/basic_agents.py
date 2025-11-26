@@ -1,22 +1,24 @@
 import numpy as np
 
-
 class Farmgym_Agent:
     def __init__(self):
         self.farm = None
 
-    def reset(self, farm):
+    def reset(self, observation):
+        ()
+
+    def init(self, farm):
         self.farm = farm
 
-    def init(self, observation):
+    def update(self, action,reward,observation,info):
         pass
 
-    def update(self, obs, reward, terminated, truncated, info):
-        pass
-
-    def choose_action(self):
+    def choose_observation(self):
         raise NotImplementedError
-        # return self.farm.action_space.sample()
+
+
+    def choose_intervention(self):
+        raise NotImplementedError
 
 
 class Farmgym_RandomAgent(Farmgym_Agent):
@@ -38,12 +40,19 @@ class Farmgym_RandomAgent(Farmgym_Agent):
         self.x += 0.25
         threshold = 10 / self.x
         if np.random.rand() > threshold:
-            obs_actions_len = len(self.farm.farmgym_observation_actions)
+            obs_actions_len = len(self.farm.space_builder.farmgym_observation_actions)
             action = self.get_harvest_index(
                 obs_actions_len, self.farm.action_space.space.n
             )
             return action
         return self.farm.action_space.sample()
+
+
+    def choose_intervention(self):
+        return self.choose_action()
+
+    def choose_observation(self):
+        return self.choose_action()
 
 
 class Farmgym_PolicyAgent(Farmgym_Agent):

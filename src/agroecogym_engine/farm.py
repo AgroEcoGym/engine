@@ -65,6 +65,7 @@ class Farm(gym.Env):
         policies=None,
         interaction_mode="AOMDP",
         seed=None,
+        render_mode="human"
     ):
         # --- Naming and structure
         self.name_assigner = NameAssigner()
@@ -101,7 +102,7 @@ class Farm(gym.Env):
 
         self.action_converter = ActionConverter(self)
         self.monitoring = MonitoringManager(self)
-        self.renderer = FarmRenderer(self)
+        self.renderer = FarmRenderer(self,render_mode)
 
 
     def seed(self, seed=None):
@@ -116,6 +117,12 @@ class Farm(gym.Env):
 
     # QUESTION:  Do we add shared entities outside fields ?? (but need to be updated only once /day ). Or do let an entity in a field to be used by a farmer in other field (e.g. water tank).
 
+    def set_render_mode(self,render_mode):
+        if (render_mode=="human"):
+            self.renderer.render_mode= "text"
+        else:
+            self.renderer.render_mode= render_mode
+        self.renderer.init()
 
     def reset(self, seed=None, options=None):
         """
@@ -136,7 +143,6 @@ class Farm(gym.Env):
         """Render the current state of the farm."""
         self.renderer.render(mode)
 
-
     def add_monitoring(
         self, list_of_variables, tensorboard=True, matview=True, launch=True
     ):
@@ -144,6 +150,11 @@ class Farm(gym.Env):
         self.monitoring.attach(list_of_variables, tensorboard, matview, launch)
 
 
+    def close(self):
+        super().close()
+        if self.monitor:
+            self.monitor.close()
+        self.renderer.close()
 
     def __str__(self):
         """
@@ -181,14 +192,14 @@ class Farm(gym.Env):
         )
         s += self.renderer.actions_to_string()
         return s
-
-    def print_state(self):
-        """Print a concise view of the current observable state."""
-        for fi, field in self.fields.items():
-            print(f"Field: {fi}")
-            for e, ent in field.entities.items():
-                vals = {v: getattr(val, 'value', None) for v, val in ent.variables.items()}
-                print(f"  {e}: {vals}")
+    #
+    # def print_state(self):
+    #     """Print a concise view of the current observable state."""
+    #     for fi, field in self.fields.items():
+    #         print(f"Field: {fi}")
+    #         for e, ent in field.entities.items():
+    #             vals = {v: getattr(val, 'value', None) for v, val in ent.variables.items()}
+    #             print(f"  {e}: {vals}")
 
     def understand_the_farm(self):
         farm = self

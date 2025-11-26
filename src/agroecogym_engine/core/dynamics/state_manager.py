@@ -29,6 +29,7 @@ class StateManager:
         self.history = {}
 
         # print("RESET",observations,information)
+        #self.env.renderer.render_step([], observations, 0, False, False, information)
         return (observations, information)
 
     def step(self, action):
@@ -37,9 +38,15 @@ class StateManager:
         """
         if self.env.interaction_mode == "POMDP":
             # print("POMDP step")
-            return self.gym_step_POMDP(action)
+            output = self.gym_step_POMDP(action)
+            observation, reward, terminated, truncated, info = output
+            self.env.renderer.render_step(action, observation, reward, terminated, truncated, info)
+            return output
         else:  # Assumes it is AOMDP
-            return self.gym_step_AOMDP(action)
+            output = self.gym_step_AOMDP(action)
+            observation, reward, terminated, truncated, info = output
+            self.env.renderer.render_step(action, observation, reward, terminated, truncated, info)
+            return output
 
 
 

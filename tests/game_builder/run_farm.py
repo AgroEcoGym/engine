@@ -9,11 +9,9 @@ def run_gym_xp(farm: object, agent: object, max_steps: object = np.infty, render
     agent.reset(farm)
     observation, information = farm.reset()
     if "text" in render:
-        print("Initial step:")
-        print(farm.renderer.render_text([], observation, 0, False, False, information))
-        print("###################################")
+        farm.renderer.render_step([], observation, 0, False, False, information)
     if "json" in render:
-        farm.renderer.record_state_snapshot()
+        farm.renderer.render_json()
     if "image" in render:
         time_tag = time.time()
         os.mkdir("run-" + str(time_tag))
@@ -27,17 +25,16 @@ def run_gym_xp(farm: object, agent: object, max_steps: object = np.infty, render
         action = agent.choose_action()
         obs, reward, terminated, truncated, info = farm.step(action)
         if "text" in render:
-            print(farm.renderer.render_text(action, obs, reward, terminated, truncated, info))
-            print("###################################")
+            farm.renderer.render_step(action, obs, reward, terminated, truncated, info)
         if "json" in render:
-            farm.renderer.record_state_snapshot()
+            farm.renderer.render_json()
         if "image" in render:
             farm.render()
         agent.update(obs, reward, terminated, truncated, info)
         i += 1
 
     if farm.monitor is not None:
-        farm.monitor.stop()
+        farm.monitor.close()
 
     if "image" in render:
         farm.render()
